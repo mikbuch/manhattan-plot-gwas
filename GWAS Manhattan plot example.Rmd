@@ -1,0 +1,93 @@
+---
+title: "GWAS Manhattan plot example"
+author: "Mikołaj Buchwald"
+date: "Created on 15 Apr, 2021. Last compiled on `r format(Sys.time(), '%d %b, %Y')`."
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Manhattan plot of human genome
+
+## Introduction
+
+Manhattan plot is used to visualize large datasets, with large number of data points, and a significant distribution (variance) for some of these points (features). This is a primary visualization tool in genom-wide association studies (GWAS).
+
+For a basic example of a Manhattan plot used in genomics reasearch see: https://en.wikipedia.org/wiki/Manhattan_plot
+
+The below example is heavely based on the Vignette (documentation, example) from the R Bioconducotr `Sushi` package by Douglas H. Phanstiel, Alan P. Boyle, Carlos L. Araya, and Mike Snyder (https://www.bioconductor.org/packages/release/bioc/vignettes/Sushi/inst/doc/Sushi.pdf)
+
+***
+
+## Install `Sushi` package
+
+In oder to produce a Manhattan plot with R Bioconductor, one can use the `Sushi` package (https://www.bioconductor.org/packages/release/bioc/vignettes/Sushi/inst/doc/Sushi.pdf):
+
+```{r sushi}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("Sushi")
+
+library('Sushi')
+```
+
+## Data
+
+### Chromosomes
+
+`Sushu_hg18_genome` stores the information on the length of human chromosomes as described by NCBI36/hg18 genome build (see: https://www.bioconductor.org/packages/release/bioc/manuals/Sushi/man/Sushi.pdf).
+
+We can display the number of base pairs in each chromosome (in millions, i.e., 1*10^6^):
+
+```{r base_pairs}
+data(Sushi_hg18_genome)
+data.frame(Sushi_hg18_genome$V1, Sushi_hg18_genome$V2/1000000)
+```
+
+For the reference number of base pairs per chromosome see: https://www.ncbi.nlm.nih.gov/books/NBK22266/.
+
+### GWAS `bed` data
+
+Bed data representing human genes with coordinates from NCBI36/hg18 genome build (see: https://www.bioconductor.org/packages/release/bioc/manuals/Sushi/man/Sushi.pdf).
+
+The beginning of the GWAS bed data frame:
+
+```{r gwas_bed}
+data(Sushi_GWAS.bed)
+head(Sushi_GWAS.bed)
+```
+
+Number of coordinates (number of rows):
+
+```{r nrows}
+nrow(Sushi_GWAS.bed)
+```
+
+Note the names of the columns:
+```{r colnames}
+names(Sushi_GWAS.bed)
+```
+
+## Manhattan Plot
+
+A "genome" parameter is required to set how many base pairs there are in each chromosome, which also is represented in the graph in how many space particular chromosome takes.
+
+Comment: `Sushi_GWAS.bed[,5]` is the `pval.GC.DBP` column
+
+```{r pressure}
+plotManhattan(bedfile=Sushi_GWAS.bed,
+              pvalues=Sushi_GWAS.bed[,5],
+              col=SushiColors(6),
+              genome=Sushi_hg18_genome,
+              cex=0.75)
+
+labelgenome(genome=Sushi_hg18_genome,n=4,scale="Mb",
+           edgeblankfraction=0.20,cex.axis=.5)
+
+axis(side=2,las=2,tcl=.2)
+mtext("log10(P)",side=2,line=1.75,cex=1,font=2)
+mtext("chromosome",side=1,line=1.75,cex=1,font=2)
+```
